@@ -10,6 +10,15 @@ If you do not already have a cluster, you can create one by using [Minikube](htt
 [OpenShift](https://www.techrepublic.com/article/how-to-install-openshift-origin-on-ubuntu-18-04/),
 or you can choose any other available [Kubernetes cluster deployment solutions](https://unofficial-kubernetes.readthedocs.io/en/latest/setup/pick-right-solution/).
 
+### Upload Docker credentials
+
+Make sure your have [logged in](https://docs.docker.com/engine/reference/commandline/login/) to docker hub using command line.
+To upload Docker credentials, please execute next command:
+
+`
+$ ./k8s-upload-docker-credentials.sh
+` 
+
 ### Minikube Configuration
 
 #### Enable ingress addon 
@@ -18,14 +27,6 @@ To enable ingress, please execute the following command:
 
 `
 $ minikube addons enable ingress
-` 
-### Upload Docker credentials
-
-Make sure your have [logged in](https://docs.docker.com/engine/reference/commandline/login/) to docker hub using command line.
-To upload Docker credentials, please execute next command:
-
-`
-$ ./k8s-upload-docker-credentials.sh
 ` 
 
 ### OpenShift Configuration
