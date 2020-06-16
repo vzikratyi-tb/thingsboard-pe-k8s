@@ -117,11 +117,13 @@ spec:
     name: http
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tb-mqtt-transport
   namespace: thingsboard
 spec:
+  serviceName: "tb-mqtt-transport"
+  podManagementPolicy: Parallel
   replicas: 2
   selector:
     matchLabels:
@@ -154,6 +156,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: TB_MQTT_TRANSPORT_LOG_PATH
+          value: "/var/log/tb-mqtt-transport"
         - name: TB_QUEUE_TYPE
           value: "kafka"
         - name: MQTT_BIND_ADDRESS
@@ -167,6 +171,8 @@ spec:
         volumeMounts:
           - mountPath: /config
             name: tb-mqtt-transport-config
+          - mountPath: /var/log/tb-mqtt-transport
+            name: logs
         readinessProbe:
           periodSeconds: 20
           tcpSocket:
@@ -176,7 +182,15 @@ spec:
           periodSeconds: 20
           tcpSocket:
             port: 1883
-      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: logs
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 200Mi
 ---
 apiVersion: v1
 kind: Service
@@ -193,11 +207,13 @@ spec:
     name: mqtt
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tb-http-transport
   namespace: thingsboard
 spec:
+  serviceName: "tb-http-transport"
+  podManagementPolicy: Parallel
   replicas: 2
   selector:
     matchLabels:
@@ -230,6 +246,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: TB_HTTP_TRANSPORT_LOG_PATH
+          value: "/var/log/tb-http-transport"
         - name: TB_QUEUE_TYPE
           value: "kafka"
         - name: HTTP_BIND_ADDRESS
@@ -243,6 +261,8 @@ spec:
         volumeMounts:
           - mountPath: /config
             name: tb-http-transport-config
+          - mountPath: /var/log/tb-http-transport
+            name: logs
         readinessProbe:
           periodSeconds: 20
           tcpSocket:
@@ -252,7 +272,15 @@ spec:
           periodSeconds: 20
           tcpSocket:
             port: 8080
-      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: logs
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 200Mi
 ---
 apiVersion: v1
 kind: Service
@@ -268,11 +296,13 @@ spec:
     name: http
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: tb-coap-transport
   namespace: thingsboard
 spec:
+  serviceName: "tb-coap-transport"
+  podManagementPolicy: Parallel
   replicas: 2
   selector:
     matchLabels:
@@ -306,6 +336,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: TB_COAP_TRANSPORT_LOG_PATH
+          value: "/var/log/tb-coap-transport"
         - name: TB_QUEUE_TYPE
           value: "kafka"
         - name: COAP_BIND_ADDRESS
@@ -319,7 +351,17 @@ spec:
         volumeMounts:
           - mountPath: /config
             name: tb-coap-transport-config
-      restartPolicy: Always
+          - mountPath: /var/log/tb-coap-transport
+            name: logs
+  volumeClaimTemplates:
+    - metadata:
+        name: logs
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 200Mi
 ---
 apiVersion: v1
 kind: Service
@@ -394,58 +436,4 @@ spec:
   ports:
   - port: 8080
     name: http
----
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
-  name: tb-ingress
-  namespace: thingsboard
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /api/v1/.*
-        backend:
-          serviceName: tb-http-transport
-          servicePort: 8080
-      - path: /api/.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /swagger.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /webjars.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /v2/.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /static/rulenode/.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /oauth2/.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /login/oauth2/.*
-        backend:
-          serviceName: tb-node
-          servicePort: 8080
-      - path: /
-        backend:
-          serviceName: tb-web-ui
-          servicePort: 8080
-      - path: /.*
-        backend:
-          serviceName: tb-web-ui
-          servicePort: 8080
 ---

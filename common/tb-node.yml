@@ -43,6 +43,8 @@ spec:
               path:  thingsboard.conf
             - key: logback
               path:  logback.xml
+        - name: tb-node-logs
+          emptyDir: {}
       imagePullSecrets:
         - name: regcred
       containers:
@@ -89,6 +91,8 @@ spec:
         volumeMounts:
           - mountPath: /config
             name: tb-node-config
+          - mountPath: /var/log/thingsboard
+            name: tb-node-logs
           - mountPath: /data
             name: tb-node-data
         livenessProbe:
